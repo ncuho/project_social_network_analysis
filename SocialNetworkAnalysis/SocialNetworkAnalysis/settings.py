@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+LOGIN_URL = "login"
 
 # Application definition
 
@@ -80,6 +81,7 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 DATABASE_CONNECTION_POOLING = False
 
 # Password validation
