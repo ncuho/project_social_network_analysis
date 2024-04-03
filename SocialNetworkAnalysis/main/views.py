@@ -24,7 +24,7 @@ def login_views(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    return HttpResponse('Authenticated successfully')
+                    return redirect('%s?next=%s' % ("/", request.path))
                 else:
                     return HttpResponse('Disabled account')
             else:
