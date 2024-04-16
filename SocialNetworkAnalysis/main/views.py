@@ -1,11 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .account.forms import LoginForm
-#from .models import Link
+from .models import Link
 
 
 def index(request):
@@ -53,3 +53,16 @@ def regist_views(request):
     else:
         user_form = UserCreationForm()
     return render(request, 'main/register.html', {'user_form': user_form})
+
+
+
+
+def get_links_view(request):
+    user_id = request.user.id
+    links = Link.get_links_by_user(user_id)
+
+    data = {
+        "links": links
+    }
+
+    return JsonResponse(data)

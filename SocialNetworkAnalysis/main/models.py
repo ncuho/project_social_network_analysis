@@ -14,3 +14,8 @@ class Link(models.Model):
         return self.name
     class Meta:
         ordering = ("id",)
+
+    @classmethod
+    def get_links_by_user(cls, user_id):
+        links = cls.objects.filter(user=user_id).values_list('link', flat=True)
+        return list(links)
