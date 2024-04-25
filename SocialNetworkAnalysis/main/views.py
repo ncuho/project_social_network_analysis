@@ -43,6 +43,7 @@ def login_views(request):
 
 
 def regist_views(request):
+
     if request.method == 'POST':
         user_form = UserCreationForm(request.POST)
         # print(user_form.is_valid())
