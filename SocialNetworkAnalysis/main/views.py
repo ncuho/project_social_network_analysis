@@ -5,7 +5,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from .account.forms import LoginForm
-
+from .models import Link
 
 # from .models import Link
 
@@ -61,3 +61,17 @@ def regist_views(request):
     else:
         user_form = UserCreationForm()
     return render(request, 'main/register.html', {'user_form': user_form})
+
+    def get_links_by_user(user_id):
+        links = Link.objects.filter(user=user_id).values_list('link', flat=True)
+        return list(links)
+
+    def get_links_view(request):
+        user_id = request.user.id
+        links = get_links_by_user(user_id)
+
+        data = {
+            "links": links
+        }
+
+        return JsonResponse(data)
