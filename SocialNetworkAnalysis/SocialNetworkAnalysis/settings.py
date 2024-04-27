@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from corsheaders.defaults import default_headers
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -25,7 +25,34 @@ SECRET_KEY = "django-insecure-3%@)!m=nroittcvo0_xmx^#0f30uhq^2v#(y(oe_ur8$^-7#o7
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:3000']
+
+INTERNAL_IPS = ("127.0.0.1",)
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = default_headers + (
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Credentials',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Methods',
+)
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+]
 
 LOGIN_URL = "login"
 
@@ -38,6 +65,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "main",
 ]
 
@@ -45,10 +73,11 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = "SocialNetworkAnalysis.urls"
@@ -70,7 +99,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "SocialNetworkAnalysis.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -102,7 +130,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
@@ -113,7 +140,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
