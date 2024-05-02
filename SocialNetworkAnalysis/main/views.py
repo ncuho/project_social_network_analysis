@@ -62,16 +62,29 @@ def regist_views(request):
         user_form = UserCreationForm()
     return render(request, 'main/register.html', {'user_form': user_form})
 
-    def get_links_by_user(user_id):
-        links = Link.objects.filter(user=user_id).values_list('link', flat=True)
+def get_links_by_user(user_id):
+        links = Link.objects.filter(user_id=user_id)
         return list(links)
 
-    def get_links_view(request):
-        user_id = request.user.id
-        links = get_links_by_user(user_id)
+def get_links_view(request):
+    user_id = request.user.id
+    links = get_links_by_user(user_id)
+    print(links)
+    data = {
+        "links": links
+    }
+    return JsonResponse(data)
 
-        data = {
-            "links": links
-        }
+def remove_link(user_id, link_to_remove):
+    user_links = Link.objects.filter(user_id=user_id, link=link_to_remove)
+    if user_links.exists():
+        user_links.delete()
+        return True
+    else:
+        return False
 
-        return JsonResponse(data)
+def delete_links_by_user(request, link):
+    user_id = request.user.id
+    return remove_link(user_id, link)
+
+
