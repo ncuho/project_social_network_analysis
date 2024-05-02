@@ -1,5 +1,8 @@
 import sqlite3
 import vk_api
+import requests
+from bs4 import BeautifulSoup
+
 
 class User:
     def __init__(self, username):
@@ -7,6 +10,13 @@ class User:
         self.access_token = 'vk1.a.ae4PjjbPvm8L5vXH1F-26IEjvSsn8cUbexDNV6QtQ_qjePgHiPN3HNU_UdA_oBU9xSNhA9EWPwLk7gCDvk9g7ydePZHnAJ0Ih_j2TRUY8sLWOQztj3nc_fPyL5DW6Ut3-H4Nv34zvKLu6S4mH57yJAzbdNmFrIP5PK41sebbFP1pB75RaK_y1OvbhbCS7Awe-clGfajGGpziOLNbDSeAug'
         self.session = vk_api.VkApi(token=self.access_token)
         self.vk = self.session.get_api()
+
+        self.fake_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
+        self.req = requests.get(f"https://vk.com/{self.username}",
+                                headers={
+                                    "User-Agent": self.fake_user_agent,
+                                })
+        self.soup = BeautifulSoup(self.req.content, "lxml")
 
     def main_info(self):
         fields = "activities,about,counters,books,bdate,can_be_invited_group,connections,contacts,city,country,crop_photo,domain,education,exports,followers_count,friend_status,has_photo,has_mobile,home_town,photo_100,photo_200,photo_200_orig,photo_400_orig,photo_50,sex,site,schools,screen_name,status,verified,games,interests,is_favorite,is_friend,is_hidden_from_feed,last_seen,maiden_name,military,movies,music,nickname,occupation,online,personal,photo_id,photo_max,photo_max_orig,quotes,relation,relatives,timezone,tv,universities"
@@ -115,14 +125,70 @@ class User:
 
         return is_closed
 
+    #def post(self):
+    #    status = self.session.method("wall.get", {"domain": self.username})
+
+        #close = self.session.method("users.get", {"user_id": self.username})
+        #is_closed = close[0]["is_closed"]
+
+        #if is_closed == True:
+         #   return print("Аккаунт закрыт")
+        #print(f"Количество постов на аккаунте: {status['count']}")
+        #for post in range(int(status['count'])):
+        #    print(f"Количество комментариев: {status['items'][post]['comments']['count']}\n"
+        #          f"Фото: {status['items'][post]['attachments'][0]['photo']['sizes'][-1]['url']}")
+
+
+
+    def posts(self, all_info):
+        current_info = {}
+
+        try:
+            post_info = self.soup.find_all(class_="post_info")
+            data = {}
+            for post in post_info:
+                text = post.find(class_="wall_post_text zoom_text").text
+                likes = post. \
+                    find(class_="PostButtonReactions__title _counter_anim_container").text
+                data.update({str(text): int(likes)})
+
+        except AttributeError:
+            data = "Not found"
+        finally:
+            current_info.update({"Posts": data})
+
+        all_info[self.username].update(current_info)
+
+    def groups(self, all_info):
+        current_info = {"Block": "Groups", "Data": {}}
+
+        try:
+            data = {"Groups": {}}
+            amount = self.soup.find(class_="header_top clear_fix"). \
+                find(class_="header_count fl_l").text
+            data.update(Amount=int(amount))
+            all_groups = self.soup.find_all(class_="group_name")
+
+            for group in all_groups:
+                title = group.find("a").text
+                link = group.find("a").get("href")
+                data["Groups"].update({str(title): str(link)})
+        except AttributeError:
+            data = "Not found"
+        finally:
+            current_info.update(data)
+
+        all_info[self.username].update({"Groups": current_info})
+
+
 
 #https://vk.com/id306744629
 #https://vk.com/vladlolka_chuvstv
 #ncuhh
 #https://vk.com/id4236944
 #https://vk.com/dgorbunov
-newUser = User("ncuhh")
-newUser.main_info()
+newUser = User("vladlolka_chuvstv")
+newUser.posts()
 
 #universities, schools, relation, relatives, personal, кол-во всякой всячины
 #'albums': 0, 'badges': 0, 'audios': 1245, 'friends': 228, 'gifts': 103, 'groups': 564, 'online_friends': 2, 'pages': 375, 'photos': 3, 'subscriptions': 44, 'user_photos': 5, 'videos': 20, 'video_playlists': 0, 'new_photo_tags': 1, 'new_recognition_tags': 1, 'posts': 4, 'clips_followers': 368}
