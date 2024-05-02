@@ -87,4 +87,14 @@ def delete_links_by_user(request, link):
     user_id = request.user.id
     return remove_link(user_id, link)
 
+def add_link(user_id, link_to_add):
+    user_links = Link.objects.filter(user_id=user_id, link=link_to_add)
+    if user_links.exists():
+        user_links.add()
+        return True
+    else:
+        return False
 
+def add_links_by_user(request, link):
+    user_id = request.user.id
+    return add_link(user_id, link)
