@@ -11,13 +11,6 @@ class User:
         self.session = vk_api.VkApi(token=self.access_token)
         self.vk = self.session.get_api()
 
-        self.fake_user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36"
-        self.req = requests.get(f"https://vk.com/{self.username}",
-                                headers={
-                                    "User-Agent": self.fake_user_agent,
-                                })
-        self.soup = BeautifulSoup(self.req.content, "lxml")
-
     def main_info(self):
         fields = "activities,about,counters,books,bdate,can_be_invited_group,connections,contacts,city,country,crop_photo,domain,education,exports,followers_count,friend_status,has_photo,has_mobile,home_town,photo_100,photo_200,photo_200_orig,photo_400_orig,photo_50,sex,site,schools,screen_name,status,verified,games,interests,is_favorite,is_friend,is_hidden_from_feed,last_seen,maiden_name,military,movies,music,nickname,occupation,online,personal,photo_id,photo_max,photo_max_orig,quotes,relation,relatives,timezone,tv,universities"
         status = self.session.method("users.get", {"user_id": self.username, "fields": fields})
@@ -65,6 +58,24 @@ class User:
         music = 'нет информации' if status[0]['music'] == '' else status[0]['music']
         quotes = 'нет информации' if status[0]['quotes'] == '' else status[0]['quotes']
         verified = 'Страница верифицирована' if status[0]['verified'] == '1' else 'Страница не верифицирована'
+        albums = 'нет информации' if 'albums' not in status[0]['counters'] else status[0]['counters']['albums']
+        audios = 'нет информации' if 'audios' not in status[0]['counters'] else status[0]['counters']['audios']
+        friends = 'нет информации' if 'friends' not in status[0]['counters'] else status[0]['counters']['friends']
+        gifts = 'нет информации' if 'gifts' not in status[0]['counters'] else status[0]['counters']['gifts']
+        groups = 'нет информации' if 'groups' not in status[0]['counters'] else status[0]['counters']['groups']
+        photos = 'нет информации' if 'photos' not in status[0]['counters'] else status[0]['counters']['photos']
+        subscriptions_on_profiles = 'нет информации' if 'subscriptions' not in status[0]['counters'] else status[0]['counters']['subscriptions']
+        videos = 'нет информации' if 'videos' not in status[0]['counters'] else status[0]['counters']['videos']
+        length_posts = 'нет информации' if 'posts' not in status[0]['counters'] else status[0]['counters']['posts']
+        inspired_by = 'нет информации' if 'inspired_by' not in status[0]['personal'] else status[0]['personal']['inspired_by']
+        langs = 'нет информации' if 'langs' not in status[0]['personal'] else ', '.join(status[0]['personal']['langs'])
+        religion = 'нет информации' if 'religion' not in status[0]['personal'] else status[0]['personal']['religion']
+        if 'schools' not in status[0]:
+            schools = 'нет информации\n'
+        else:
+            schools = ''
+            for school in range(len(status[0]['schools'])):
+                schools += f"{status[0]['schools'][school]['name']}\n"
 
         print(f"Пользователь {self.username}:\n"
               f"id: {user_id}\n"
@@ -76,18 +87,33 @@ class User:
               f"Страна: {country}\n"
               f"Город: {city}\n"
               f"Родной город: {home_town}\n"
+              f"Школа: {schools}"
               f"Высшее образование: {university}, Факультет: {faculty}, Год окончания: {graduation}, "
               f"Форма обучения: {education_form}, Статус: {education_status}\n"
+              f"Языки: {langs}\n"
+              f"Количество друзей: {friends}\n"
               f"Количество подписчиков: {followers_count}\n"
               f"Фото профиля: {crop_photo}\n"
+              f"Количество альбомов: {albums}\n"
+              f"Количество аудио: {audios}\n"
+              f"Количество подарков: {gifts}\n"
+              f"Количество групп: {groups}\n"
+              f"Количество фото в профиле: {photos}\n"
+              f"Количество подписок на других пользователей: {subscriptions_on_profiles}\n"
+              f"Количество видео: {videos}\n"
+              f"Количество постов: {length_posts}\n"
               f"Деятельность: {activities}\n"
               f"Интересы: {interests}\n"
+              f"Религия: {religion}\n"
               f"Любимые книги: {books}\n"
               f"Любимые игры: {games}\n"
               f"Любимые фильмы: {movies}\n"
               f"Любимая музыка: {music}\n"
               f"Любимые цитаты: {quotes}\n"
+              f"Вдохновляет: {inspired_by}\n"
               f"{verified}\n")
+
+        print(status[0])
 
         conn = sqlite3.connect('vk_data.db')
         c = conn.cursor()
@@ -125,60 +151,18 @@ class User:
 
         return is_closed
 
-    #def post(self):
-    #    status = self.session.method("wall.get", {"domain": self.username})
+    def post(self):
+        status = self.session.method("wall.get", {"domain": self.username})
 
-        #close = self.session.method("users.get", {"user_id": self.username})
-        #is_closed = close[0]["is_closed"]
+        close = self.session.method("users.get", {"user_id": self.username})
+        is_closed = close[0]["is_closed"]
 
-        #if is_closed == True:
-         #   return print("Аккаунт закрыт")
-        #print(f"Количество постов на аккаунте: {status['count']}")
-        #for post in range(int(status['count'])):
-        #    print(f"Количество комментариев: {status['items'][post]['comments']['count']}\n"
-        #          f"Фото: {status['items'][post]['attachments'][0]['photo']['sizes'][-1]['url']}")
-
-
-
-    def posts(self, all_info):
-        current_info = {}
-
-        try:
-            post_info = self.soup.find_all(class_="post_info")
-            data = {}
-            for post in post_info:
-                text = post.find(class_="wall_post_text zoom_text").text
-                likes = post. \
-                    find(class_="PostButtonReactions__title _counter_anim_container").text
-                data.update({str(text): int(likes)})
-
-        except AttributeError:
-            data = "Not found"
-        finally:
-            current_info.update({"Posts": data})
-
-        all_info[self.username].update(current_info)
-
-    def groups(self, all_info):
-        current_info = {"Block": "Groups", "Data": {}}
-
-        try:
-            data = {"Groups": {}}
-            amount = self.soup.find(class_="header_top clear_fix"). \
-                find(class_="header_count fl_l").text
-            data.update(Amount=int(amount))
-            all_groups = self.soup.find_all(class_="group_name")
-
-            for group in all_groups:
-                title = group.find("a").text
-                link = group.find("a").get("href")
-                data["Groups"].update({str(title): str(link)})
-        except AttributeError:
-            data = "Not found"
-        finally:
-            current_info.update(data)
-
-        all_info[self.username].update({"Groups": current_info})
+        if is_closed == True:
+            return print("Аккаунт закрыт")
+        print(f"Количество постов на аккаунте: {status['count']}")
+        for post in range(int(status['count'])):
+            print(f"Количество комментариев: {status['items'][post]['comments']['count']}\n"
+                  f"Фото: {status['items'][post]['attachments'][0]['photo']['sizes'][-1]['url']}")
 
 
 
@@ -187,8 +171,5 @@ class User:
 #ncuhh
 #https://vk.com/id4236944
 #https://vk.com/dgorbunov
-newUser = User("vladlolka_chuvstv")
-newUser.posts()
-
-#universities, schools, relation, relatives, personal, кол-во всякой всячины
-#'albums': 0, 'badges': 0, 'audios': 1245, 'friends': 228, 'gifts': 103, 'groups': 564, 'online_friends': 2, 'pages': 375, 'photos': 3, 'subscriptions': 44, 'user_photos': 5, 'videos': 20, 'video_playlists': 0, 'new_photo_tags': 1, 'new_recognition_tags': 1, 'posts': 4, 'clips_followers': 368}
+newUser = User("dgorbunov")
+newUser.main_info()
