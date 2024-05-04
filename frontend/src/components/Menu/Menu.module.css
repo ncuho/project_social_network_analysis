@@ -1,0 +1,12 @@
+.menu_items {
+    display: flex;
+    align-items: center;
+}
+.menu_item_link {
+    margin-left: 20px;
+    margin-right: 20px;
+    color: #fff;
+}
+.menu_item_link:hover {
+    opacity: 0.8;
+}
