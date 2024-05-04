@@ -43,21 +43,17 @@ def login_views(request):
 
 
 def regist_views(request):
-
     if request.method == 'POST':
-        user_form = UserCreationForm(request.POST)
-        # print(user_form.is_valid())
-        if user_form.is_valid():
-            user_form.save()
-            username = user_form.cleaned_data.get('username')
-            password = user_form.cleaned_data.get('password1')
-            # print(username, password)
-            user = authenticate(username=username, password=password)
+        login_s = request.GET.get("login", "")
+        pas = request.GET.get("pas", "")
+        if len(User.objects.all().filter(username=login_s)) == 0:
+            user = User.objects.create_user(username=login_s, email="lennon@thebeatles.com", password=pas)
+            user.save()
+            user = authenticate(username=login_s, password=pas)
             login(request, user)
             return JsonResponse({'data': "вы зарегистрировались", 'session_id': request.session.session_key},
                                 status=200)
         else:
-            JsonResponse({'data': "вы не зарегистрировались"}, status=403)
+            return JsonResponse({'data': "вы не зарегистрировались"}, status=402)
     else:
-        user_form = UserCreationForm()
-    return render(request, 'main/register.html', {'user_form': user_form})
+        return JsonResponse({'data': "вы не зарегистрировались"}, status=403)
