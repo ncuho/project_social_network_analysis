@@ -1,7 +1,5 @@
 import sqlite3
 import vk_api
-import requests
-from bs4 import BeautifulSoup
 
 
 class User:
@@ -124,7 +122,9 @@ class User:
                                           country TEXT, city TEXT, home_town TEXT, university TEXT, faculty TEXT, graduation TEXT,
                                           education_form TEXT, education_status TEXT, number_of_subscribers TEXT,
                                           photo TEXT, activities TEXT, interests TEXT, books TEXT, games TEXT, movies TEXT, music TEXT,
-                                          quotes TEXT, verified TEXT)''')
+                                          quotes TEXT, verified TEXT, albums TEXT, audios TEXT, friends TEXT, gifts TEXT, 
+                                          groups TEXT, photos TEXT, subscriptions_on_profiles TEXT, videos TEXT, length_posts TEXT, 
+                                          inspired_by TEXT, langs TEXT, religion TEXT)''')
 
         data = c.execute("SELECT id FROM user_info WHERE id = ?", (user_id, )).fetchone()
         if data == None:
@@ -132,19 +132,24 @@ class User:
                       "country, city, home_town, university,"
                       "faculty, graduation, education_form, education_status, number_of_subscribers,"
                       "photo, activities, interests, books, games, movies, music,"
-                      "quotes, verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                      "quotes, verified, albums, audios, friends, gifts, groups, photos, "
+                      "subscriptions_on_profiles, videos, length_posts, inspired_by, "
+                      "langs, religion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, "
+                      "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                       (user_id, is_account_closed, first_name, last_name, bdate, status_text, country, city, home_town,
                  university, faculty, graduation, education_form, education_status, followers_count, crop_photo,
-                 activities, interests, books, games, movies, music, quotes, verified))
+                 activities, interests, books, games, movies, music, quotes, verified, albums, audios, friends, gifts, groups, photos,
+                 subscriptions_on_profiles, videos, length_posts, inspired_by, langs, religion))
         else:
-            c.execute(
-                "UPDATE user_info SET is_closed = ?, first_name = ?, last_name = ?, birthday = ?, status = ?, country = ?, city = ?, "
+            c.execute("UPDATE user_info SET is_closed = ?, first_name = ?, last_name = ?, birthday = ?, status = ?, country = ?, city = ?, "
                 "home_town = ?, university = ?, faculty = ?, graduation = ?, education_form = ?, education_status = ?, "
                 "number_of_subscribers = ?, photo = ?, activities = ?, interests = ?, books = ?, games = ?, movies = ?, "
-                "music = ?, quotes = ?, verified = ? WHERE id = ?",
+                "music = ?, quotes = ?, verified = ?, albums = ?, audios = ?, friends = ?, gifts = ?, groups = ?, photos = ?, "
+                "subscriptions_on_profiles = ?, videos = ?, length_posts = ?, inspired_by = ?, langs = ?, religion = ? WHERE id = ?",
                 (is_account_closed, first_name, last_name, bdate, status_text, country, city, home_town,
                  university, faculty, graduation, education_form, education_status, followers_count, crop_photo,
-                 activities, interests, books, games, movies, music, quotes, verified, user_id))
+                 activities, interests, books, games, movies, music, quotes, verified, albums, audios, friends, gifts, groups, photos,
+                 subscriptions_on_profiles, videos, length_posts, inspired_by, langs, religion, user_id))
 
         conn.commit()
         conn.close()
