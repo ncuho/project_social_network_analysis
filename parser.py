@@ -111,8 +111,6 @@ class User:
               f"Вдохновляет: {inspired_by}\n"
               f"{verified}\n")
 
-        print(status[0])
-
         conn = sqlite3.connect('vk_data.db')
         c = conn.cursor()
 
@@ -154,20 +152,39 @@ class User:
         conn.commit()
         conn.close()
 
-        return is_closed
+        return status
 
     def post(self):
-        status = self.session.method("wall.get", {"domain": self.username})
+        posts = self.session.method("wall.get", {"domain": self.username})
 
-        close = self.session.method("users.get", {"user_id": self.username})
+        close = User.main_info(self)
         is_closed = close[0]["is_closed"]
 
         if is_closed == True:
             return print("Аккаунт закрыт")
-        print(f"Количество постов на аккаунте: {status['count']}")
-        for post in range(int(status['count'])):
-            print(f"Количество комментариев: {status['items'][post]['comments']['count']}\n"
-                  f"Фото: {status['items'][post]['attachments'][0]['photo']['sizes'][-1]['url']}")
+
+        print(f"Количество постов на аккаунте: {posts['count']}")
+        posts = posts['items']
+
+        return posts
+
+    def friends(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        friends = self.session.method("friends.get", {"user_id": user_id, "fields": "nickname, photo_max_orig"})['items']
+
+        return friends
+
+    def followers(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        followers = self.session.method("users.getFollowers", {"user_id": user_id, "fields": "nickname, photo_max_orig"})["items"]
+
+        return followers
+
+    def subscriptions(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        subscriptions = self.session.method("users.getSubscriptions", {"user_id": user_id, "extended": 1})['items']
+
+        return subscriptions
 
 
 
@@ -176,5 +193,7 @@ class User:
 #ncuhh
 #https://vk.com/id4236944
 #https://vk.com/dgorbunov
-newUser = User("dgorbunov")
+newUser = User("vladlolka_chuvstv")
 newUser.main_info()
+newUser.subscriptions()
+newUser.post()
