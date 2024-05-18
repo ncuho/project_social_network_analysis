@@ -8,5 +8,6 @@ urlpatterns = [
     path('register', views.regist_views, name='register'),
     path("getlinks", views.get_links_view, name="getlinks"),
     path("addlinks", views.add_links_by_user, name="addlinks"),
-    path("addinfo", views.add_info_by_links, name="addinfo")
+    path("addinfo", views.add_info_by_links, name="addinfo"),
+    path("gigachat", views.giga_chat_ai, name="gigachat")
 ]

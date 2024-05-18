@@ -6,6 +6,9 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
+from langchain_community.chat_models.gigachat import GigaChat
+from langchain_core.messages import SystemMessage, HumanMessage
+
 from .account.forms import LoginForm
 from .models import Link, UserInfo
 from .parser.parser import User_pars
@@ -203,3 +206,22 @@ def add_info_by_links(request):
                              verified=verified, link_id=link_osn[0].id)
         user_info.save()
         return JsonResponse(json.loads(json.dumps(user_info.get_info)), status=200)
+
+
+chat = GigaChat(
+    credentials='OTk3NTBiMzctYWE1MC00MDQ1LWIzZWMtODY3YzQxZGIyZDAwOmUwZWFmZDRhLTM0ODQtNGQ0NS05YTY0LWY1MjgzOWM1YjcwYQ==',
+    verify_ssl_certs=False)
+
+
+def giga_chat_ai(request):
+    text = request.GET.get("text", "")
+    messages = [
+        SystemMessage(
+            content="Ты эмпатичный бот-психолог, который помогает пользователю решить его проблемы."
+        )
+    ]
+    messages.append(HumanMessage(content=text))
+    res = chat(messages)
+    messages.append(res)
+    print(res.content)
+    return JsonResponse({'data': res.content}, status=403)
