@@ -1,5 +1,4 @@
 import json
-
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -66,6 +65,8 @@ class UserInfo(models.Model):
     inspired_by = models.CharField(max_length=len_char_fild, null=True)
     verified = models.CharField(max_length=len_char_fild, null=True)
 
+    frends_data = models.CharField(max_length=len_char_fild**2, null=True)
+
     @property
     def get_info(self):
         return {"link": str(self.link),
@@ -106,7 +107,8 @@ class UserInfo(models.Model):
                 "music": str(self.music),
                 "quotes": str(self.quotes),
                 "inspired_by": str(self.inspired_by),
-                "verified": str(self.verified)}
+                "verified": str(self.verified),
+                "frends_data": str(self.frends_data)}
 
     def __str__(self):
         return str({"link": self.link, "username": self.username, "user_id": self.user_id,

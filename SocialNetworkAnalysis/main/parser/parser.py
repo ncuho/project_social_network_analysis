@@ -16,10 +16,41 @@ class User_pars:
             print("Ошибка при запросе к API VK")
         return status[0]
 
+    def friends(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        friends = self.session.method("friends.get", {"user_id": user_id, "fields": "nickname, photo_max_orig"})[
+            'items']
+        rez = []
+        for i in friends:
+            rez.append(f"{i['id']}) {i['first_name']} {i['last_name']}")
+
+        return rez
+
+    def get_friends_id(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        friends = self.session.method("friends.get", {"user_id": user_id, "fields": "nickname, photo_max_orig"})[
+            'items']
+        rez = []
+        for i in friends:
+            rez.append(i['id'])
+        return rez
+
+    def followers(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        followers = \
+            self.session.method("users.getFollowers", {"user_id": user_id, "fields": "nickname, photo_max_orig"})[
+                "items"]
+
+        return followers
+
+    def subscriptions(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        subscriptions = self.session.method("users.getSubscriptions", {"user_id": user_id, "extended": 1})['items']
+
+        return subscriptions
 
 # https://vk.com/id306744629
 # https://vk.com/vladlolka_chuvstv
 # ncuhh
 # https://vk.com/id4236944
 # https://vk.com/dgorbunov
-
