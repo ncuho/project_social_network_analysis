@@ -1,5 +1,6 @@
 import sqlite3
 import vk_api
+import time
 
 
 class User:
@@ -8,66 +9,131 @@ class User:
         self.access_token = 'vk1.a.ae4PjjbPvm8L5vXH1F-26IEjvSsn8cUbexDNV6QtQ_qjePgHiPN3HNU_UdA_oBU9xSNhA9EWPwLk7gCDvk9g7ydePZHnAJ0Ih_j2TRUY8sLWOQztj3nc_fPyL5DW6Ut3-H4Nv34zvKLu6S4mH57yJAzbdNmFrIP5PK41sebbFP1pB75RaK_y1OvbhbCS7Awe-clGfajGGpziOLNbDSeAug'
         self.session = vk_api.VkApi(token=self.access_token)
         self.vk = self.session.get_api()
+        self.first_name = self.session.method("users.get", {"user_id": self.username})[0].get('first_name', 'нет информации')
 
     def main_info(self):
+        if self.first_name == 'DELETED':
+            return print("Аккаунт пользователя был удален")
+
         fields = "activities,about,counters,books,bdate,can_be_invited_group,connections,contacts,city,country,crop_photo,domain,education,exports,followers_count,friend_status,has_photo,has_mobile,home_town,photo_100,photo_200,photo_200_orig,photo_400_orig,photo_50,sex,site,schools,screen_name,status,verified,games,interests,is_favorite,is_friend,is_hidden_from_feed,last_seen,maiden_name,military,movies,music,nickname,occupation,online,personal,photo_id,photo_max,photo_max_orig,quotes,relation,relatives,timezone,tv,universities"
         status = self.session.method("users.get", {"user_id": self.username, "fields": fields})
         if "error" in status:
             print("Ошибка при запросе к API VK")
         is_closed = status[0]["is_closed"]
-        bdate = status[0]['bdate']
-        if len(bdate.split('.')) == 3:
-            if len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 1:
-                bdate = '0' + bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
-            elif len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 2:
-                bdate = '0' + bdate.split('.')[0] + '.' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
-            elif len(bdate.split('.')[0]) == 2 and len(bdate.split('.')[1]) == 1:
-                bdate = bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
-        elif len(bdate.split('.')) == 2:
-            if len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 1:
-                bdate = '0' + bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1]
-            elif len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 2:
-                bdate = '0' + bdate.split('.')[0] + '.' + bdate.split('.')[1]
-            elif len(bdate.split('.')[0]) == 2 and len(bdate.split('.')[1]) == 1:
-                bdate = bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1]
+
+        try:
+            bdate = status[0]['bdate']
+            if len(bdate.split('.')) == 3:
+                if len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 1:
+                    bdate = '0' + bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
+                elif len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 2:
+                    bdate = '0' + bdate.split('.')[0] + '.' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
+                elif len(bdate.split('.')[0]) == 2 and len(bdate.split('.')[1]) == 1:
+                    bdate = bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
+            elif len(bdate.split('.')) == 2:
+                if len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 1:
+                    bdate = '0' + bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1]
+                elif len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 2:
+                    bdate = '0' + bdate.split('.')[0] + '.' + bdate.split('.')[1]
+                elif len(bdate.split('.')[0]) == 2 and len(bdate.split('.')[1]) == 1:
+                    bdate = bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1]
+        except KeyError:
+            bdate = 'нет информации'
 
         user_id = status[0]['id']
         is_account_closed = 'закрыт' if is_closed else 'открыт'
         first_name = status[0].get('first_name', 'нет информации')
         last_name = status[0].get('last_name', 'нет информации')
-        bdate = 'нет информации' if status[0]['bdate'] == '' else bdate
-        status_text = 'нет информации' if status[0]['status'] == '' else status[0]['status']
-        country = 'нет информации' if status[0]['country'] == '' else status[0]['country']['title']
-        city = 'нет информации' if status[0]['city'] == '' else status[0]['city']['title']
-        home_town = 'нет информации' if status[0]['home_town'] == '' else status[0]['home_town']
-        university = 'нет информации' if status[0]['university_name'] == '' else status[0]['university_name']
-        faculty = 'нет информации' if status[0]['faculty_name'] == '' else status[0]['faculty_name']
-        graduation = 'нет информации' if status[0]['graduation'] == 0 else status[0]['graduation']
+        try:
+            bdate = 'нет информации' if status[0]['bdate'] == '' else bdate
+        except KeyError:
+            bdate = 'нет информации'
+        try:
+            status_text = 'нет информации' if status[0]['status'] == '' else status[0]['status']
+        except KeyError:
+            status_text = 'нет информации'
+        try:
+            country = 'нет информации' if status[0]['country'] == '' else status[0]['country']['title']
+        except KeyError:
+            country = 'нет информации'
+        try:
+            city = 'нет информации' if status[0]['city'] == '' else status[0]['city']['title']
+        except KeyError:
+            city = 'нет информации'
+        try:
+            home_town = 'нет информации' if status[0]['home_town'] == '' else status[0]['home_town']
+        except KeyError:
+            home_town = 'нет информции'
+        try:
+            university = 'нет информации' if status[0]['university_name'] == '' else status[0]['university_name']
+        except KeyError:
+            university = 'нет информации'
+        try:
+            faculty = 'нет информации' if status[0]['faculty_name'] == '' else status[0]['faculty_name']
+        except KeyError:
+            faculty = 'нет информации'
+        try:
+            graduation = 'нет информации' if status[0]['graduation'] == 0 else status[0]['graduation']
+        except KeyError:
+            graduation = 'нет информации'
         education_form = 'нет информации' if 'education_form' not in status[0] else status[0]['education_form']
         education_status = 'нет информации' if 'education_status' not in status[0] else status[0]['education_status']
         followers_count = 'нет информации' if 'followers_count' not in status[0] else status[0]['followers_count']
-        crop_photo = 'нет информации' if status[0]['crop_photo'] == '' else \
-        status[0]['crop_photo']['photo']['sizes'][-1]['url']
-        activities = 'нет информации' if status[0]['activities'] == '' else status[0]['activities']
-        interests = 'нет информации' if status[0]['interests'] == '' else status[0]['interests']
-        books = 'нет информации' if status[0]['books'] == '' else status[0]['books']
-        games = 'нет информации' if status[0]['games'] == '' else status[0]['games']
-        movies = 'нет информации' if status[0]['movies'] == '' else status[0]['movies']
-        music = 'нет информации' if status[0]['music'] == '' else status[0]['music']
-        quotes = 'нет информации' if status[0]['quotes'] == '' else status[0]['quotes']
-        verified = 'Страница верифицирована' if status[0]['verified'] == '1' else 'Страница не верифицирована'
-        albums = 'нет информации' if 'albums' not in status[0]['counters'] else status[0]['counters']['albums']
-        audios = 'нет информации' if 'audios' not in status[0]['counters'] else status[0]['counters']['audios']
-        friends = 'нет информации' if 'friends' not in status[0]['counters'] else status[0]['counters']['friends']
-        gifts = 'нет информации' if 'gifts' not in status[0]['counters'] else status[0]['counters']['gifts']
-        groups = 'нет информации' if 'groups' not in status[0]['counters'] else status[0]['counters']['groups']
-        photos = 'нет информации' if 'photos' not in status[0]['counters'] else status[0]['counters']['photos']
-        subscriptions_on_profiles = 'нет информации' if 'subscriptions' not in status[0]['counters'] else status[0]['counters']['subscriptions']
-        videos = 'нет информации' if 'videos' not in status[0]['counters'] else status[0]['counters']['videos']
-        length_posts = 'нет информации' if 'posts' not in status[0]['counters'] else status[0]['counters']['posts']
-        inspired_by = 'нет информации' if 'inspired_by' not in status[0]['personal'] else status[0]['personal']['inspired_by']
-        langs = 'нет информации' if 'langs' not in status[0]['personal'] else ', '.join(status[0]['personal']['langs'])
-        religion = 'нет информации' if 'religion' not in status[0]['personal'] else status[0]['personal']['religion']
+        try:
+            crop_photo = 'нет информации' if status[0]['crop_photo'] == '' else \
+            status[0]['crop_photo']['photo']['sizes'][-1]['url']
+        except KeyError:
+            crop_photo = 'нет фото профиля'
+        try:
+            activities = 'нет информации' if status[0]['activities'] == '' else status[0]['activities']
+        except KeyError:
+            activities = 'нет информации'
+        try:
+            interests = 'нет информации' if status[0]['interests'] == '' else status[0]['interests']
+        except KeyError:
+            interests = 'нет информации'
+        try:
+            books = 'нет информации' if status[0]['books'] == '' else status[0]['books']
+        except KeyError:
+            books = 'нет информации'
+        try:
+            games = 'нет информации' if status[0]['games'] == '' else status[0]['games']
+        except KeyError:
+            games = 'нет информации'
+        try:
+            movies = 'нет информации' if status[0]['movies'] == '' else status[0]['movies']
+        except KeyError:
+            movies = 'нет информации'
+        try:
+            music = 'нет информации' if status[0]['music'] == '' else status[0]['music']
+        except KeyError:
+            music = 'нет информации'
+        try:
+            quotes = 'нет информации' if status[0]['quotes'] == '' else status[0]['quotes']
+        except KeyError:
+            quotes = 'нет информации'
+        verified = 'Страница верифицирована' if status[0].get('verified') == '1' else 'Страница не верифицирована'
+        albums = status[0]['counters'].get('albums', 'нет информации')
+        audios = status[0]['counters'].get('audios', 'нет информации')
+        friends = status[0]['counters'].get('friends', 'нет информации')
+        gifts = status[0]['counters'].get('gifts', 'нет информации')
+        groups = status[0]['counters'].get('groups', 'нет информации')
+        photos = status[0]['counters'].get('photos', 'нет информации')
+        subscriptions_on_profiles = status[0]['counters'].get('subscriptions', 'нет информации')
+        videos = status[0]['counters'].get('videos', 'нет информации')
+        length_posts = status[0]['counters'].get('posts', 'нет информации')
+        try:
+            inspired_by = status[0]['personal'].get('inspired_by', 'нет информации')
+        except KeyError:
+            inspired_by = 'нет информации'
+        try:
+            langs = ', '.join(status[0]['personal'].get('langs', ['нет информации']))
+        except KeyError:
+            langs = 'нет информации'
+        try:
+            religion = status[0]['personal'].get('religion', 'нет информации')
+        except KeyError:
+            religion = 'нет информации'
         if 'schools' not in status[0]:
             schools = 'нет информации\n'
         else:
@@ -120,8 +186,8 @@ class User:
                                           country TEXT, city TEXT, home_town TEXT, university TEXT, faculty TEXT, graduation TEXT,
                                           education_form TEXT, education_status TEXT, number_of_subscribers TEXT,
                                           photo TEXT, activities TEXT, interests TEXT, books TEXT, games TEXT, movies TEXT, music TEXT,
-                                          quotes TEXT, verified TEXT, albums TEXT, audios TEXT, friends TEXT, gifts TEXT, 
-                                          groups TEXT, photos TEXT, subscriptions_on_profiles TEXT, videos TEXT, length_posts TEXT, 
+                                          quotes TEXT, verified TEXT, albums TEXT, audios TEXT, friends TEXT, gifts TEXT,
+                                          groups TEXT, photos TEXT, subscriptions_on_profiles TEXT, videos TEXT, length_posts TEXT,
                                           inspired_by TEXT, langs TEXT, religion TEXT)''')
 
         data = c.execute("SELECT id FROM user_info WHERE id = ?", (user_id, )).fetchone()
@@ -155,45 +221,87 @@ class User:
         return status
 
     def post(self):
-        posts = self.session.method("wall.get", {"domain": self.username})
+        if self.first_name == 'DELETED':
+            return f"Аккаунт пользователя был удален"
 
-        close = User.main_info(self)
-        is_closed = close[0]["is_closed"]
-
-        if is_closed == True:
-            return print("Аккаунт закрыт")
-
-        print(f"Количество постов на аккаунте: {posts['count']}")
-        posts = posts['items']
+        try:
+            posts = self.session.method("wall.get", {"domain": self.username})
+            print(f"Количество постов на аккаунте: {posts['count']}")
+            posts = posts['items']
+        except vk_api.exceptions.ApiError:
+            posts = 'Аккаунт пользователя закрыт'
 
         return posts
 
     def friends(self):
+        if self.first_name == 'DELETED':
+            return f"Аккаунт пользователя был удален"
+
         user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
-        friends = self.session.method("friends.get", {"user_id": user_id, "fields": "nickname, photo_max_orig"})['items']
+        try:
+            friends = self.session.method("friends.get", {"user_id": user_id, "fields": "nickname, photo_max_orig"})['items']
+        except vk_api.exceptions.ApiError:
+            friends = 'Аккаунт пользователя закрыт'
 
         return friends
 
     def followers(self):
+        if self.first_name == 'DELETED':
+            return f"Аккаунт пользователя был удален"
+
         user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
-        followers = self.session.method("users.getFollowers", {"user_id": user_id, "fields": "nickname, photo_max_orig"})["items"]
+        try:
+            followers = self.session.method("users.getFollowers", {"user_id": user_id, "fields": "nickname, photo_max_orig"})["items"]
+        except vk_api.exceptions.ApiError:
+            followers = 'Аккаунт пользователя закрыт'
 
         return followers
 
     def subscriptions(self):
+        if self.first_name == 'DELETED':
+            return f"Аккаунт пользователя был удален"
+
         user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
-        subscriptions = self.session.method("users.getSubscriptions", {"user_id": user_id, "extended": 1})['items']
+        try:
+            subscriptions = self.session.method("users.getSubscriptions", {"user_id": user_id, "extended": 1})['items']
+        except vk_api.exceptions.ApiError:
+            subscriptions = 'Аккаунт пользователя закрыт'
 
         return subscriptions
 
+    def comments(self):
+        if self.first_name == 'DELETED':
+            return f"Аккаунт пользователя был удален"
 
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        try:
+            posts = self.session.method("wall.get", {"domain": self.username})
+            comments = []
+            for post in posts['items']:
+                try:
+                    comment = self.session.method("wall.getComments", {"owner_id": user_id, "post_id": post['id']})['items']
+                    if comment:
+                        for com in comment:
+                            if com['from_id'] == user_id:
+                                comments.append(com['text'])
+                except vk_api.exceptions.ApiError:
+                    comments = 'Комментарии закрыты'
+        except vk_api.exceptions.ApiError:
+            comments = 'Аккаунт пользователя закрыт'
 
-#https://vk.com/id306744629
-#https://vk.com/vladlolka_chuvstv
-#ncuhh
-#https://vk.com/id4236944
-#https://vk.com/dgorbunov
-newUser = User("vladlolka_chuvstv")
-newUser.main_info()
-newUser.subscriptions()
-newUser.post()
+        print(comments)
+        return comments
+
+    def last_seen(self):
+        if self.first_name == 'DELETED':
+            return f"Аккаунт пользователя был удален"
+
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        try:
+            last_seen = self.session.method("users.get", {"user_ids": user_id, "fields": "last_seen"})[0]['last_seen']['time']
+            converted_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_seen))
+        except KeyError:
+            converted_time = 'Нет информации о последнем посещении'
+
+        print(converted_time)
+        return converted_time
