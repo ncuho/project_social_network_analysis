@@ -12,5 +12,7 @@ urlpatterns = [
     path("getfrendinfo", views.get_frends_by_link_for_bd, name="getfrendinfo"),
     path("gigachatconnectinfo", views.giga_chat_ai_connect_info, name="gigachatconnectinfo"),
     path("gigachatgetinfo", views.giga_chat_ai_get_info, name="gigachatgetinfo"),
-    path("gigachat", views.giga_chat_ai, name="gigachat")
+    path("gigachat", views.giga_chat_ai, name="gigachat"),
+    path("getinfografikwords", views.get_info_grafik_worlds, name="getinfografikwords"),
+    path("getinfografiktoksik", views.get_info_grafik_toksik, name="getinfografiktoksik")
 ]

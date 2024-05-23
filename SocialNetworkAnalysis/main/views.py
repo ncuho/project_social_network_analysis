@@ -1,4 +1,6 @@
+## -*- coding: utf-8 -*-
 import json
+from collections import Counter
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -9,11 +11,16 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from langchain_community.chat_models.gigachat import GigaChat
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_text_splitters import nltk
 
 from .account.forms import LoginForm
 from .models import Link, UserInfo
 from .parser.parser import User_pars
-
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import word_tokenize
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+nltk.download('vader_lexicon')
 
 # from .models import Link
 
@@ -160,8 +167,7 @@ def add_info_by_links(request):
         session = Session.objects.get(session_key=session_id)
         session_data = session.get_decoded()
         uid = session_data.get('_auth_user_id')
-        link_osn = [1]
-        link_osn[0] = add_link(uid, link_base)
+        link_osn = [add_link(uid, link_base)]
 
     if (len(UserInfo.objects.filter(link_id=link_osn[0].id)) > 0):
         return JsonResponse({"data": UserInfo.objects.filter(link_id=link_osn[0].id)[0].get_info},
@@ -171,7 +177,6 @@ def add_info_by_links(request):
         status = [1]
         status[0] = newUser.main_info()
         frends = newUser.friends()
-        print(frends)
 
         is_closed = status[0]["is_closed"]
         bdate = status[0]['bdate']
@@ -503,3 +508,52 @@ def giga_chat_ai_connect_info(request):
             return JsonResponse({'data': "Недостаточно данных для анализа"}, status=200)
     else:
         return JsonResponse({'data': "Данных о пользователе нет в базе данных"}, status=403)
+
+
+
+def get_info_grafik_worlds(request):
+    link_base = request.GET.get("link", "")
+    link = link_base.split("/")[len(link_base.split("/")) - 1]
+    link_osn = Link.objects.filter(link=link_base)
+
+    if len(link_osn) == 0:
+        session_id = request.GET.get("session_id", "")
+        session = Session.objects.get(session_key=session_id)
+        session_data = session.get_decoded()
+        uid = session_data.get('_auth_user_id')
+        link_osn = [add_link(uid, link_base)]
+
+    newUser = User_pars(link)
+    comments = newUser.comments()
+    words = word_tokenize("\n".join(comments))
+    word_freq = Counter(words)
+    most_common_words = word_freq.most_common(10)
+    return JsonResponse({"data": most_common_words}, status=200)
+
+def sentiment_analysis(text):
+    sid = SentimentIntensityAnalyzer()
+    print(text)
+    sentiment_scores = sid.polarity_scores(text)
+    return sentiment_scores
+
+def get_info_grafik_toksik(request):
+    link_base = request.GET.get("link", "")
+    link = link_base.split("/")[len(link_base.split("/")) - 1]
+    link_osn = Link.objects.filter(link=link_base)
+
+    if len(link_osn) == 0:
+        session_id = request.GET.get("session_id", "")
+        session = Session.objects.get(session_key=session_id)
+        session_data = session.get_decoded()
+        uid = session_data.get('_auth_user_id')
+        link_osn = [add_link(uid, link_base)]
+
+    newUser = User_pars(link)
+    comments = newUser.comments()
+    sentiments = []
+    #comments.append("This is so bad!")
+    for text in comments:
+        blob = sentiment_analysis(text)
+        sentiments.append(blob["compound"])
+    print(sentiments)
+    return JsonResponse({"data": sentiments}, status=200)

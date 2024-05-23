@@ -43,6 +43,26 @@ class User_pars:
 
         return followers
 
+    def comments(self):
+        user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
+        try:
+            posts = self.session.method("wall.get", {"domain": self.username})
+            comments = []
+            for post in posts['items']:
+                try:
+                    comment = self.session.method("wall.getComments", {"owner_id": user_id, "post_id": post['id']})[
+                        'items']
+                    if comment:
+                        for com in comment:
+                            if com['from_id'] == user_id:
+                                comments.append(com['text'])
+                except vk_api.exceptions.ApiError:
+                    comments = 'Комментарии закрыты'
+        except vk_api.exceptions.ApiError:
+            comments = 'Аккаунт пользователя закрыт'
+
+        return comments
+
     def subscriptions(self):
         user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
         subscriptions = self.session.method("users.getSubscriptions", {"user_id": user_id, "extended": 1})['items']
@@ -54,3 +74,4 @@ class User_pars:
 # ncuhh
 # https://vk.com/id4236944
 # https://vk.com/dgorbunov
+# https://vk.com/abalakireva2011
