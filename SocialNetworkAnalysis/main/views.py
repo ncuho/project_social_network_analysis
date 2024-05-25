@@ -179,7 +179,10 @@ def add_info_by_links(request):
         frends = newUser.friends()
 
         is_closed = status[0]["is_closed"]
-        bdate = status[0]['bdate']
+        if 'bdate' in status[0]:
+            bdate = status[0]['bdate']
+        else:
+            bdate = 'нет информации'
         if len(bdate.split('.')) == 3:
             if len(bdate.split('.')[0]) == 1 and len(bdate.split('.')[1]) == 1:
                 bdate = '0' + bdate.split('.')[0] + '.' + '0' + bdate.split('.')[1] + '.' + bdate.split('.')[2]
@@ -199,8 +202,14 @@ def add_info_by_links(request):
         is_account_closed = 'закрыт' if is_closed else 'открыт'
         first_name = status[0].get('first_name', 'нет информации')
         last_name = status[0].get('last_name', 'нет информации')
-        bdate = 'нет информации' if status[0]['bdate'] == '' else bdate
-        status_text = 'нет информации' if status[0]['status'] == '' else status[0]['status']
+        if 'bdate' in status[0]:
+            bdate = 'нет информации' if status[0]['bdate'] == '' else bdate
+        else:
+            bdate = 'нет информации'
+        if 'status' in status[0]:
+            status_text = 'нет информации' if status[0]['status'] == '' else status[0]['status']
+        else:
+            status_text = 'нет информации'
         if 'country' in status[0]:
             country = 'нет информации' if status[0]['country'] == '' else status[0]['country']['title']
         else:
