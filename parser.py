@@ -1,6 +1,7 @@
 import sqlite3
 import vk_api
 import time
+from googletrans import Translator
 
 
 class User:
@@ -231,6 +232,7 @@ class User:
         except vk_api.exceptions.ApiError:
             posts = 'Аккаунт пользователя закрыт'
 
+        print(posts)
         return posts
 
     def friends(self):
@@ -283,7 +285,10 @@ class User:
                     if comment:
                         for com in comment:
                             if com['from_id'] == user_id:
-                                comments.append(com['text'])
+                                translator = Translator()
+                                text = com['text']
+                                translation = translator.translate(text, dest='en')
+                                comments.append(translation.text)
                 except vk_api.exceptions.ApiError:
                     comments = 'Комментарии закрыты'
         except vk_api.exceptions.ApiError:
