@@ -71,7 +71,6 @@ class User_pars:
 
 # https://vk.com/id306744629
 # https://vk.com/vladlolka_chuvstv
-# ncuhh
 # https://vk.com/id4236944
 # https://vk.com/dgorbunov
 # https://vk.com/abalakireva2011

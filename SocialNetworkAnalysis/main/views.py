@@ -1,47 +1,36 @@
-## -*- coding: utf-8 -*-
-import json
 from collections import Counter
-
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from langchain_community.chat_models.gigachat import GigaChat
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_text_splitters import nltk
-
 from .account.forms import LoginForm
 from .models import Link, UserInfo
 from .parser.parser import User_pars
+from googletrans import Translator
 import nltk
+
 nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-nltk.download('vader_lexicon')
 
-# from .models import Link
+nltk.download('vader_lexicon')
 
 
 def index(request):
-    # print(Link.objects.all());
     if not request.user.is_authenticated:
         return redirect('%s?next=%s' % ("login", request.path))
     if request.method == 'POST':
-        user = User.objects.all()
-        # print(user)
         return render(request, 'main/index.html', {'result': "Hello World!"})
     return render(request, 'main/index.html')
 
 
 def login_views(request):
     if request.method == 'POST':
-        # print(User.objects.all())
         login_s = request.GET.get("login", "")
         pas = request.GET.get("pas", "")
-        print(login_s, pas)
         user = authenticate(username=login_s, password=pas)
         if user is not None:
             if user.is_active:
@@ -141,8 +130,6 @@ def get_frends_by_link_for_bd(request):
         link_osn = [1]
         link_osn[0] = add_link(uid, link_base)
     if (len(UserInfo.objects.filter(link_id=link_osn[0].id)) > 0):
-        newUser = User_pars(link)
-        id_frends = newUser.get_friends_id()
         user_info = UserInfo.objects.filter(link_id=link_osn[0].id)[0]
         if user_info.frends_data is None or user_info.frends_data == '':
             print(user_info.frends_data, user_info.frends_data)
@@ -176,7 +163,6 @@ def add_info_by_links(request):
         newUser = User_pars(link)
         status = [1]
         status[0] = newUser.main_info()
-        frends = newUser.friends()
 
         is_closed = status[0]["is_closed"]
         if 'bdate' in status[0]:
@@ -389,9 +375,9 @@ def giga_chat_ai(request):
     print(res.content)
     return JsonResponse({'data': res.content}, status=403)
 
+
 def giga_chat_ai_get_info(request):
     link_base = request.GET.get("link", "")
-    link = link_base.split("/")[len(link_base.split("/")) - 1]
     link_osn = Link.objects.filter(link=link_base)
     messages = [
         SystemMessage(
@@ -406,7 +392,7 @@ def giga_chat_ai_get_info(request):
         link_osn = [1]
         link_osn[0] = add_link(uid, link_base)
 
-    if(len(UserInfo.objects.filter(link_id=link_osn[0].id)) > 0):
+    if (len(UserInfo.objects.filter(link_id=link_osn[0].id)) > 0):
         info = UserInfo.objects.filter(link_id=link_osn[0].id)[0].get_info
         mas_fact = []
         text = "Дай подробный психологический портрет человеком о котором известно: "
@@ -454,10 +440,8 @@ def giga_chat_ai_get_info(request):
         return JsonResponse({'data': "Данных о пользователе нет в базе данных"}, status=403)
 
 
-
 def giga_chat_ai_connect_info(request):
     link_base = request.GET.get("link", "")
-    link = link_base.split("/")[len(link_base.split("/")) - 1]
     link_osn = Link.objects.filter(link=link_base)
     messages = [
         SystemMessage(
@@ -472,7 +456,7 @@ def giga_chat_ai_connect_info(request):
         link_osn = [1]
         link_osn[0] = add_link(uid, link_base)
 
-    if(len(UserInfo.objects.filter(link_id=link_osn[0].id)) > 0):
+    if (len(UserInfo.objects.filter(link_id=link_osn[0].id)) > 0):
         info = UserInfo.objects.filter(link_id=link_osn[0].id)[0].get_info
         mas_fact = []
         text = "Дай короткие и максимально эффективные рекомендации по знакомству с человеком о котором известно: "
@@ -519,19 +503,15 @@ def giga_chat_ai_connect_info(request):
         return JsonResponse({'data': "Данных о пользователе нет в базе данных"}, status=403)
 
 
-
 def get_info_grafik_worlds(request):
     link_base = request.GET.get("link", "")
     link = link_base.split("/")[len(link_base.split("/")) - 1]
     link_osn = Link.objects.filter(link=link_base)
-
     if len(link_osn) == 0:
         session_id = request.GET.get("session_id", "")
         session = Session.objects.get(session_key=session_id)
         session_data = session.get_decoded()
         uid = session_data.get('_auth_user_id')
-        link_osn = [add_link(uid, link_base)]
-
     newUser = User_pars(link)
     comments = newUser.comments()
     words = word_tokenize("\n".join(comments))
@@ -539,30 +519,30 @@ def get_info_grafik_worlds(request):
     most_common_words = word_freq.most_common(10)
     return JsonResponse({"data": most_common_words}, status=200)
 
+
 def sentiment_analysis(text):
     sid = SentimentIntensityAnalyzer()
     print(text)
     sentiment_scores = sid.polarity_scores(text)
     return sentiment_scores
 
+
 def get_info_grafik_toksik(request):
     link_base = request.GET.get("link", "")
     link = link_base.split("/")[len(link_base.split("/")) - 1]
     link_osn = Link.objects.filter(link=link_base)
-
     if len(link_osn) == 0:
         session_id = request.GET.get("session_id", "")
         session = Session.objects.get(session_key=session_id)
         session_data = session.get_decoded()
         uid = session_data.get('_auth_user_id')
-        link_osn = [add_link(uid, link_base)]
-
     newUser = User_pars(link)
     comments = newUser.comments()
     sentiments = []
-    #comments.append("This is so bad!")
     for text in comments:
-        blob = sentiment_analysis(text)
+        translator = Translator()
+        translation = translator.translate(text, dest='en')
+        blob = sentiment_analysis(translation)
         sentiments.append(blob["compound"])
     print(sentiments)
     return JsonResponse({"data": sentiments}, status=200)
