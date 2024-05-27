@@ -1,7 +1,8 @@
 import sqlite3
 import vk_api
 import time
-from googletrans import Translator
+import argostranslate.package
+import argostranslate.translate
 
 
 class User:
@@ -275,6 +276,17 @@ class User:
         if self.first_name == 'DELETED':
             return f"Аккаунт пользователя был удален"
 
+        from_code = "ru"
+        to_code = "en"
+        argostranslate.package.update_package_index()
+        available_packages = argostranslate.package.get_available_packages()
+        package_to_install = next(
+            filter(
+                lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+            )
+        )
+        argostranslate.package.install_from_path(package_to_install.download())
+
         user_id = int(self.session.method("utils.resolveScreenName", {"screen_name": self.username})["object_id"])
         try:
             posts = self.session.method("wall.get", {"domain": self.username})
@@ -285,10 +297,8 @@ class User:
                     if comment:
                         for com in comment:
                             if com['from_id'] == user_id:
-                                translator = Translator()
-                                text = com['text']
-                                translation = translator.translate(text, dest='en')
-                                comments.append(translation.text)
+                                translatedText = argostranslate.translate.translate(com["text"], from_code, to_code)
+                                comments.append(translatedText)
                 except vk_api.exceptions.ApiError:
                     comments = 'Комментарии закрыты'
         except vk_api.exceptions.ApiError:
