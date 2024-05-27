@@ -334,31 +334,35 @@ def add_info_by_links(request):
             schools = ''
             for school in range(len(status[0]['schools'])):
                 schools += f"{status[0]['schools'][school]['name']}\n"
+        try:
+            user_info = UserInfo.objects.create(username=link, user_id=user_id, is_account_closed=is_account_closed,
+                                                first_name=first_name,
+                                                last_name=last_name, bdate=bdate, status_text=status_text,
+                                                country=country,
+                                                city=city,
+                                                home_town=home_town,
+                                                schools=schools, university=university, faculty=faculty,
+                                                graduation=graduation,
+                                                education_form=education_form, education_status=education_status,
+                                                langs=langs,
+                                                friends=friends,
+                                                followers_count=followers_count, crop_photo=crop_photo, albums=albums,
+                                                audios=audios,
+                                                gifts=gifts,
+                                                groups=groups, photos=photos,
+                                                subscriptions_on_profiles=subscriptions_on_profiles,
+                                                videos=videos,
+                                                length_posts=length_posts, activities=activities, interests=interests,
+                                                religion=religion,
+                                                books=books,
+                                                games=games, movies=movies, music=music, quotes=quotes,
+                                                inspired_by=inspired_by,
+                                                verified=verified, link_id=link_osn[0].id,
+                                                frends_data='\n'.join(newUser.friends()))
+            user_info.save()
+        except ApiError:
+            return JsonResponse({"data": "Акаунт закрыт"}, status=201)
 
-        user_info = UserInfo.objects.create(username=link, user_id=user_id, is_account_closed=is_account_closed,
-                                            first_name=first_name,
-                                            last_name=last_name, bdate=bdate, status_text=status_text, country=country,
-                                            city=city,
-                                            home_town=home_town,
-                                            schools=schools, university=university, faculty=faculty,
-                                            graduation=graduation,
-                                            education_form=education_form, education_status=education_status,
-                                            langs=langs,
-                                            friends=friends,
-                                            followers_count=followers_count, crop_photo=crop_photo, albums=albums,
-                                            audios=audios,
-                                            gifts=gifts,
-                                            groups=groups, photos=photos,
-                                            subscriptions_on_profiles=subscriptions_on_profiles,
-                                            videos=videos,
-                                            length_posts=length_posts, activities=activities, interests=interests,
-                                            religion=religion,
-                                            books=books,
-                                            games=games, movies=movies, music=music, quotes=quotes,
-                                            inspired_by=inspired_by,
-                                            verified=verified, link_id=link_osn[0].id,
-                                            frends_data='\n'.join(newUser.friends()))
-        user_info.save()
 
         return JsonResponse({"data": user_info.get_info}, status=200)
 
