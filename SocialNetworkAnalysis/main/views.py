@@ -6,10 +6,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from langchain_community.chat_models.gigachat import GigaChat
 from langchain_core.messages import SystemMessage, HumanMessage
+from vk_api import ApiError
+
 from .account.forms import LoginForm
 from .models import Link, UserInfo
 from .parser.parser import User_pars
-from googletrans import Translator
 import nltk
 
 nltk.download('punkt')
@@ -17,6 +18,8 @@ from nltk.tokenize import word_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 nltk.download('vader_lexicon')
+import argostranslate.package
+import argostranslate.translate
 
 
 def index(request):
@@ -160,9 +163,12 @@ def add_info_by_links(request):
         return JsonResponse({"data": UserInfo.objects.filter(link_id=link_osn[0].id)[0].get_info},
                             status=200)
     else:
-        newUser = User_pars(link)
-        status = [1]
-        status[0] = newUser.main_info()
+        try:
+            newUser = User_pars(link)
+            status = [1]
+            status[0] = newUser.main_info()
+        except ApiError:
+            return JsonResponse({"data": "Акаунт закрыт"}, status=201)
 
         is_closed = status[0]["is_closed"]
         if 'bdate' in status[0]:
@@ -358,7 +364,7 @@ def add_info_by_links(request):
 
 
 chat = GigaChat(
-    credentials='OTk3NTBiMzctYWE1MC00MDQ1LWIzZWMtODY3YzQxZGIyZDAwOmUwZWFmZDRhLTM0ODQtNGQ0NS05YTY0LWY1MjgzOWM1YjcwYQ==',
+    credentials='OTk3NTBiMzctYWE1MC00MDQ1LWIzZWMtODY3YzQxZGIyZDAwOjM4NjkxOGY2LTM4YjYtNGM3OC1hZTBkLTIxN2M4YmVhMjQ5Mg==',
     verify_ssl_certs=False)
 
 
@@ -372,8 +378,7 @@ def giga_chat_ai(request):
     messages.append(HumanMessage(content=text))
     res = chat(messages)
     messages.append(res)
-    print(res.content)
-    return JsonResponse({'data': res.content}, status=403)
+    return JsonResponse({'data': res.content}, status=200)
 
 
 def giga_chat_ai_get_info(request):
@@ -397,35 +402,39 @@ def giga_chat_ai_get_info(request):
         mas_fact = []
         text = "Дай подробный психологический портрет человеком о котором известно: "
         if info["status_text"] != 'нет информации':
-            mas_fact.append("его статус в вк " + info["status_text"])
+            mas_fact.append("статус в вк " + info["status_text"])
+        if info["first_name"] != 'нет информации':
+            mas_fact.append("имя в соц сетях " + info["first_name"])
+        if info["last_name"] != 'нет информации':
+            mas_fact.append("фамилия в соц сетях " + info["last_name"])
         if info["country"] != 'нет информации':
-            mas_fact.append("он живет в стране " + info["country"])
+            mas_fact.append("живет в стране " + info["country"])
         if info["city"] != 'нет информации':
-            mas_fact.append("он живет в городе " + info["city"])
+            mas_fact.append("живет в городе " + info["city"])
         if info["home_town"] != 'нет информации':
-            mas_fact.append("он родился в городе " + info["home_town"])
+            mas_fact.append("родился в городе " + info["home_town"])
         if info["university"] != 'нет информации':
-            mas_fact.append("он учился в институте " + info["university"])
+            mas_fact.append("учился в институте " + info["university"])
         if info["faculty"] != 'нет информации':
-            mas_fact.append("он учился в институте на факультете " + info["faculty"])
+            mas_fact.append("учился в институте на факультете " + info["faculty"])
         if info["activities"] != 'нет информации':
-            mas_fact.append("он занимется " + info["activities"])
+            mas_fact.append("занимется " + info["activities"])
         if info["interests"] != 'нет информации':
-            mas_fact.append("он интересуется " + info["interests"])
+            mas_fact.append("интересуется " + info["interests"])
         if info["religion"] != 'нет информации':
-            mas_fact.append("его религия " + info["religion"])
+            mas_fact.append("религия " + info["religion"])
         if info["books"] != 'нет информации':
-            mas_fact.append("его любимые книги " + info["books"])
+            mas_fact.append("любимые книги " + info["books"])
         if info["games"] != 'нет информации':
-            mas_fact.append("его любимые игры " + info["games"])
+            mas_fact.append("любимые игры " + info["games"])
         if info["movies"] != 'нет информации':
-            mas_fact.append("его любимые фильмы " + info["movies"])
+            mas_fact.append("любимые фильмы " + info["movies"])
         if info["music"] != 'нет информации':
-            mas_fact.append("его любимая музыка " + info["music"])
+            mas_fact.append("любимая музыка " + info["music"])
         if info["quotes"] != 'нет информации':
-            mas_fact.append("его любимые цитаты " + info["quotes"])
+            mas_fact.append("любимые цитаты " + info["quotes"])
         if info["inspired_by"] != 'нет информации':
-            mas_fact.append("его вдохновляет " + info["inspired_by"])
+            mas_fact.append("вдохновляет " + info["inspired_by"])
         text += ",".join(mas_fact) + "."
         text += "Также напиши рекомендации по знакомству, убеждению, налаживанию доверительных отношений с этим человеком. Дай короткое описание этого пользователя."
         if len(mas_fact) > 2:
@@ -435,7 +444,7 @@ def giga_chat_ai_get_info(request):
             print(res.content)
             return JsonResponse({'data': res.content}, status=200)
         else:
-            return JsonResponse({'data': "Недостаточно данных для анализа"}, status=200)
+            return JsonResponse({'data': "Недостаточно данных для анализа"}, status=201)
     else:
         return JsonResponse({'data': "Данных о пользователе нет в базе данных"}, status=403)
 
@@ -461,35 +470,39 @@ def giga_chat_ai_connect_info(request):
         mas_fact = []
         text = "Дай короткие и максимально эффективные рекомендации по знакомству с человеком о котором известно: "
         if info["status_text"] != 'нет информации':
-            mas_fact.append("его статус в вк " + info["status_text"])
+            mas_fact.append("статус в вк " + info["status_text"])
+        if info["first_name"] != 'нет информации':
+            mas_fact.append("имя в соц сетях " + info["first_name"])
+        if info["last_name"] != 'нет информации':
+            mas_fact.append("фамилия в соц сетях " + info["last_name"])
         if info["country"] != 'нет информации':
-            mas_fact.append("он живет в стране " + info["country"])
+            mas_fact.append("живет в стране " + info["country"])
         if info["city"] != 'нет информации':
-            mas_fact.append("он живет в городе " + info["city"])
+            mas_fact.append("живет в городе " + info["city"])
         if info["home_town"] != 'нет информации':
-            mas_fact.append("он родился в городе " + info["home_town"])
+            mas_fact.append("родился в городе " + info["home_town"])
         if info["university"] != 'нет информации':
-            mas_fact.append("он учился в институте " + info["university"])
+            mas_fact.append("учился в институте " + info["university"])
         if info["faculty"] != 'нет информации':
-            mas_fact.append("он учился в институте на факультете " + info["faculty"])
+            mas_fact.append("учился в институте на факультете " + info["faculty"])
         if info["activities"] != 'нет информации':
-            mas_fact.append("он занимется " + info["activities"])
+            mas_fact.append("занимется " + info["activities"])
         if info["interests"] != 'нет информации':
-            mas_fact.append("он интересуется " + info["interests"])
+            mas_fact.append("интересуется " + info["interests"])
         if info["religion"] != 'нет информации':
-            mas_fact.append("его религия " + info["religion"])
+            mas_fact.append("религия " + info["religion"])
         if info["books"] != 'нет информации':
-            mas_fact.append("его любимые книги " + info["books"])
+            mas_fact.append("любимые книги " + info["books"])
         if info["games"] != 'нет информации':
-            mas_fact.append("его любимые игры " + info["games"])
+            mas_fact.append("любимые игры " + info["games"])
         if info["movies"] != 'нет информации':
-            mas_fact.append("его любимые фильмы " + info["movies"])
+            mas_fact.append("любимые фильмы " + info["movies"])
         if info["music"] != 'нет информации':
-            mas_fact.append("его любимая музыка " + info["music"])
+            mas_fact.append("любимая музыка " + info["music"])
         if info["quotes"] != 'нет информации':
-            mas_fact.append("его любимые цитаты " + info["quotes"])
+            mas_fact.append("любимые цитаты " + info["quotes"])
         if info["inspired_by"] != 'нет информации':
-            mas_fact.append("его вдохновляет " + info["inspired_by"])
+            mas_fact.append("вдохновляет " + info["inspired_by"])
         text += ",".join(mas_fact) + "."
         if len(mas_fact) > 2:
             messages.append(HumanMessage(content=text))
@@ -512,8 +525,11 @@ def get_info_grafik_worlds(request):
         session = Session.objects.get(session_key=session_id)
         session_data = session.get_decoded()
         uid = session_data.get('_auth_user_id')
-    newUser = User_pars(link)
-    comments = newUser.comments()
+    try:
+        newUser = User_pars(link)
+        comments = newUser.comments()
+    except ApiError:
+        return JsonResponse({"data": "Акаунт закрыт"}, status=201)
     words = word_tokenize("\n".join(comments))
     word_freq = Counter(words)
     most_common_words = word_freq.most_common(10)
@@ -536,13 +552,25 @@ def get_info_grafik_toksik(request):
         session = Session.objects.get(session_key=session_id)
         session_data = session.get_decoded()
         uid = session_data.get('_auth_user_id')
-    newUser = User_pars(link)
-    comments = newUser.comments()
+    try:
+        newUser = User_pars(link)
+        comments = newUser.comments()
+    except ApiError:
+        return JsonResponse({"data": "Акаунт закрыт"}, status=201)
     sentiments = []
+    from_code = "ru"
+    to_code = "en"
+    argostranslate.package.update_package_index()
+    available_packages = argostranslate.package.get_available_packages()
+    package_to_install = next(
+        filter(
+            lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+        )
+    )
+    argostranslate.package.install_from_path(package_to_install.download())
     for text in comments:
-        translator = Translator()
-        translation = translator.translate(text, dest='en')
-        blob = sentiment_analysis(translation)
+        translatedText = argostranslate.translate.translate(text, from_code, to_code)
+        blob = sentiment_analysis(translatedText)
         sentiments.append(blob["compound"])
     print(sentiments)
     return JsonResponse({"data": sentiments}, status=200)
